@@ -1,15 +1,21 @@
 steps:
+  - id: decipher secret
+    name: gcr.io/cloud-builders/gcloud
+    args:
+    - kms
+    - decrypt
+    - "--ciphertext-file=secret.yaml.encrypted"
+    - "--plaintext-file=secret.yaml"
+    - "--location=$_GKE_LOCATION"
+    - "--keyring=prohmpossadhorn-key-ring"
+    - "--key=hello-world-k8s"
 
-  # - id: decipher secret
-  #   name: gcr.io/cloud-builders/gcloud
-  #   args:
-  #   - kms
-  #   - decrypt
-  #   - "--ciphertext-file=secret.yaml.encrypted"
-  #   - "--plaintext-file=secret.yaml"
-  #   - "--location=$_GKE_LOCATION"
-  #   - "--keyring=prohmpossadhorn-key-ring"
-  #   - "--key=hello-world-k8s"
+  - id: Generate application secret
+    name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', 'secret.yaml', '--namespace', '$_K8S_NAMESPACE']
+    env:
+    - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
 
   # - id: Generate application configMap
   #   name: 'gcr.io/cloud-builders/kubectl'
@@ -17,7 +23,7 @@ steps:
   #   env:
   #   - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
   #   - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
-    
+
   - id: Build
     name: gcr.io/cloud-builders/docker
     entrypoint: bash
@@ -26,22 +32,22 @@ steps:
   - id: Push
     name: gcr.io/cloud-builders/docker
     args: ["push", "asia.gcr.io/effective-might-323902/hello-world-k8s-prohmpossadhorn"]
-  
+
   - id: Generate manifest
-    name: 'gcr.io/cloud-builders/gke-deploy'
-    entrypoint: 'kustomize'
+    name: gcr.io/cloud-builders/gke-deploy
+    entrypoint: kustomize
     args:
-      - 'build'
-      - 'kustomize/overlays/staging'
-      - '-o'
-      - '/workspace/kustomize-output.yaml'
+      - build
+      - kubernetes/overlays/$_KUSTOMIZE_ENV
+      - -o
+      - /workspace/kustomize-output.yaml
     env:
-    - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
+      - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
 
   - id: Apply deploy
     name: gcr.io/cloud-builders/gke-deploy
-    args: ["apply", "--filename=kustomize-output.yaml", "--namespace=default"]
+    args: ["apply", "--filename=kustomize-output.yaml", "--cluster=prohmpossadhorn-cluster", "--location=asia-southeast1", "--namespace=default"]
     env:
     - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
     - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
