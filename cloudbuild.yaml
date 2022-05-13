@@ -38,9 +38,9 @@ steps:
     entrypoint: kustomize
     args:
       - build
-      - /workspace/kubernetes/overlays/$_KUSTOMIZE_ENV
+      - kubernetes/overlays/$_KUSTOMIZE_ENV
       - -o
-      - /workspace/kustomize-output.yaml
+      - kustomize-output.yaml
     env:
       - 'CLOUDSDK_COMPUTE_ZONE=$_GKE_LOCATION'
       - 'CLOUDSDK_CONTAINER_CLUSTER=$_GKE_CLUSTER'
