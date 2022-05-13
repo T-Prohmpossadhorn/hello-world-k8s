@@ -4,5 +4,7 @@ kind: ConfigMapGenerator
 metadata:
   name: hello-world-k8s-prohmpossadhorn-env
 envs:
-- application.properties
+  - application.properties
+options:
+  disableNameSuffixHash: true
   

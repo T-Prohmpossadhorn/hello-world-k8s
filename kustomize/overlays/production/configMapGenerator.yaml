@@ -4,4 +4,6 @@ metadata:
   name: hello-world-k8s-Prohmpossadhorn-env
 envs:
   - application.properties
+options:
+  disableNameSuffixHash: true
   
